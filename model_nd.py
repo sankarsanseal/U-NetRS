@@ -119,7 +119,7 @@ class UnetRS_with_levels(nn.Module):
         ] )
 
 
-        
+
 
         ###########################################################################################
         #
@@ -811,13 +811,6 @@ class UnetSE(nn.Module):
         block_conv4 = self.se_block4(block_conv4)
 
 
-        # block_conv1 = torch.mul(block_conv1, block_se1)
-
-        # block_conv2 = torch.mul(block_conv2, block_se2)
-
-        # block_conv3 = torch.mul(block_conv3, block_se3)
-
-        # block_conv4 = torch.mul(block_conv4, block_se4)
 
 
 
@@ -826,34 +819,20 @@ class UnetSE(nn.Module):
 
         block_backbone = self.backbone_block(block_down4)
 
-        # print(block_backbone.shape)
+
 
         #######################################################################
 
 
         block_up4 = self.up_block4(block_backbone, block_conv4)
 
-        # block_up_concate4 = torch.cat([block_conv4,block_up4], dim = 1)
-
-        # print(block_up_concate4.shape)
-
         block_up3 = self.up_block3(block_up4, block_conv3)
-
-        # block_up_concate3 = torch.cat([block_conv3, block_up3], dim = 1)
-
-        # print(block_up_concate3.shape)
 
         block_up2 = self.up_block2(block_up3, block_conv2)
 
-        # block_up_concate2 = torch.cat([block_conv2, block_up2], dim = 1)
-
-        # print(block_up_concate2.shape)
-
         block_up1 = self.up_block1(block_up2, block_conv1)
 
-        # block_up_concate1 = torch.cat([block_conv1, block_up1], dim = 1)
 
-        # print(block_up_concate1.shape)
 
         #######################################################################
 
@@ -946,13 +925,9 @@ class downward_leg(nn.Module):
         else:
             bn_out = input_tensor
 
-        # block_out = self.conv1(bn_out)
 
         block_out = self.conv_section(bn_out)
-        # block_out = self.relu1(block_out)
 
-        # block_out = self.conv2(block_out)
-        # block_out = self.relu2(block_out)
 
         return block_out , self.maxpool(block_out)
 
