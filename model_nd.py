@@ -41,6 +41,8 @@ class UnetRS_with_levels(nn.Module):
 
         dimensions:     Whether modality is 2D or 3D, for 2D please use 2 and for 3D use 3.
 
+        se_ration:      It is used for Sequeeze-and-Excitation module. the "r" value of the ratio.
+
 
         """
 
@@ -77,6 +79,13 @@ class UnetRS_with_levels(nn.Module):
         elif self.dimensions == 3:
             self.input_block = nn.BatchNorm3d(num_features = self.in_channels)
 
+        ###########################################################################################
+        #
+        #  Down Sampling Definition
+        #
+        ###########################################################################################
+        
+
         self.downward_sampling = nn.ModuleList(
             [ downward_leg ( in_channels=
                                             # No of input channels are selected.
@@ -92,12 +101,32 @@ class UnetRS_with_levels(nn.Module):
         ] )
 
 
+
+
+        ###########################################################################################
+        #
+        # Squeeze-and Excitation Definition
+        #
+        ###########################################################################################
+
+
+
         self.SE_blocks = nn.ModuleList( [
             Squeeze_and_Excitation(in_channels = self.starting_conv_channels * 2 ** (level),\
                 ratio = self.se_ratio, dimensions = self.dimensions)
 
             for level in range(self.no_of_levels)
         ] )
+
+
+        
+
+        ###########################################################################################
+        #
+        # Attention Gate Definition
+        #
+        ###########################################################################################
+
 
         self.AG_blocks = nn.ModuleList([
             nn.ModuleList([
