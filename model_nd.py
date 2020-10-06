@@ -16,24 +16,30 @@ from torch import nn
 from torch.nn import functional as F
 from torch.autograd import Variable as V
 
-class UnetSE_with_levels(nn.Module):
+class UnetRS_with_levels(nn.Module):
     """
     
     Dynamically Creating UnetSE with number of given levels
 
     """
 
-    def __init__(self, in_channels, out_channels, no_of_levels, no_of_outputs = 1, is_bn_enabled = True,\
+    def __init__(self, in_channels, out_channels, no_of_levels, no_of_outputs = 1, is_bn_enabled = False,\
         dimensions = 3, se_ratio = 1/8):
 
         """
 
-        Down sampling portion.
+        U-NetRS initialization parameters
 
-        no_of_levels:   number of down-sampling ,
+        no_of_levels:   Number of down-sampling ,
                         if we have no_of_levels = 1, we have one level of down-sampling.
 
                         If we need 4 levels as generic Unet, please set as no_of_levels = 4
+
+        no_of_outputs:  Number of decoder outputs, default is 1.
+
+        is_bn_enable:   BatchNormalization at the each down-sampling levels, default value is False
+
+        dimensions:     Whether modality is 2D or 3D, for 2D please use 2 and for 3D use 3.
 
 
         """
@@ -371,50 +377,6 @@ class UnetSE_with_levels(nn.Module):
          ) for output_index in range(self.no_of_outputs) ]
 
 
-        # if ground_truth != None:
-        #     mask_dice_scores =  torch.tensor([ mask_dice for mask_dice, _ in\
-        #     [   self.dice_score.dice_jaccard_score(mask, ground_truth) for mask in mask_binary ]
-        #         ])
-
-        # else:
-        #     mask_dice_scores = torch.tensor( [ 1 ] * self.no_of_outputs )
-
-        # mask_dice_scores.to(dtype = torch.float)
-
-        # self.register_buffer("mask_dice_scores", tensor =  mask_dice_scores )
-
-
-        # mask_weight = self.mask_selector(self.mask_dice_scores)
-
-        
-        # size_list = list(input_tensor.size())
-        # size_list[1] = 1
-        # weighted_mask = torch.zeros(size_list , device=input_tensor.device)
-
-
-
-        # for output_index in range(self.no_of_outputs):
-
- 
-
-        #     mask_weight_expanded = mask_weight[output_index]
-        #     mask_weight_expanded = mask_weight_expanded.view(1,1,1,1)
-
-
-
-        #     weighted_mask += mask_binary[output_index] *\
-        #          mask_weight_expanded.expand_as(weighted_mask)
-
-
-
-
-        # # print(mask_weight, torch.sum(mask_weight), torch.max(weighted_mask), torch.min(weighted_mask))
-
-        # weighted_mask = torch.clamp(weighted_mask, 0., 1.0)
-         
-
-        # return weighted_mask , mask_binary
-
         return mask_binary
 
 
@@ -532,34 +494,23 @@ class Unet(nn.Module):
 
         block_backbone = self.backbone_block(block_down4)
 
-        # print(block_backbone.shape)
 
         #######################################################################
 
 
         block_up4 = self.up_block4(block_backbone, block_conv4)
 
-        # block_up_concate4 = torch.cat([block_conv4,block_up4], dim = 1)
 
-        # print(block_up_concate4.shape)
 
         block_up3 = self.up_block3(block_up4, block_conv3)
 
-        # block_up_concate3 = torch.cat([block_conv3, block_up3], dim = 1)
-
-        # print(block_up_concate3.shape)
 
         block_up2 = self.up_block2(block_up3, block_conv2)
 
-        # block_up_concate2 = torch.cat([block_conv2, block_up2], dim = 1)
-
-        # print(block_up_concate2.shape)
 
         block_up1 = self.up_block1(block_up2, block_conv1)
 
-        # block_up_concate1 = torch.cat([block_conv1, block_up1], dim = 1)
 
-        # print(block_up_concate1.shape)
 
         #######################################################################
 
@@ -604,12 +555,6 @@ class Unet_with_two_levels(nn.Module):
         self.down_block2 = downward_leg(in_channels=self.starting_conv_channels,\
             out_channels = self.starting_conv_channels*2, is_bn_enabled= False, dimensions = self.dimensions )
 
-        # self.down_block3 = downward_leg(in_channels =self.starting_conv_channels * 2 ,\
-        #     out_channels = self.starting_conv_channels * 4, is_bn_enabled= False, dimensions = self.dimensions)
-
-        # self.down_block4 = downward_leg( in_channels= self.starting_conv_channels * 4  ,\
-        #     out_channels= self.starting_conv_channels * 8, is_bn_enabled= False, dimensions = self.dimensions )
-
         ##############################################################################
 
 
@@ -619,11 +564,7 @@ class Unet_with_two_levels(nn.Module):
 
         ##############################################################################
 
-        # self.up_block4 = upward_leg (in_channels= self.starting_conv_channels * 16, \
-        #     out_channels= self.starting_conv_channels * 8, dimensions = self.dimensions)
 
-        # self.up_block3 = upward_leg(in_channels=self.starting_conv_channels * 8, \
-        #     out_channels= self.starting_conv_channels * 4, dimensions = self.dimensions)
 
         self.up_block2 = upward_leg(in_channels=self.starting_conv_channels * 4,\
             out_channels= self.starting_conv_channels * 2, dimensions = self.dimensions)
@@ -672,9 +613,6 @@ class Unet_with_two_levels(nn.Module):
 
         block_conv2, block_down2 = self.down_block2(block_down1)
 
-        # block_conv3, block_down3 = self.down_block3(block_down2)
-
-        # block_conv4, block_down4 = self.down_block4(block_down3)
 
 
 
@@ -683,12 +621,6 @@ class Unet_with_two_levels(nn.Module):
 
         #######################################################################
 
-
-        # block_up4 = self.up_block4(block_backbone, block_conv4)
-
-
-
-        # block_up3 = self.up_block3(block_up4, block_conv3)
 
 
 
